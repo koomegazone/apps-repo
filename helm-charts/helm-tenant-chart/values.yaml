@@ -1,0 +1,54 @@
+tenantId: ""
+accountId: ""
+region: ""
+apps:
+  producer:
+    enabled: true
+    envId: ""
+    image:
+      repository: 064711168361.dkr.ecr.<REGION>.amazonaws.com/producer
+      tag: "0.1"
+    ingress:
+      enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+  consumer:
+    enabled: true
+    envId: ""
+    image:
+      repository: 064711168361.dkr.ecr.<REGION>.amazonaws.com/consumer
+      tag: "0.1"
+    ingress:
+      enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+  payments:
+    enabled: true
+    image:
+      repository: 064711168361.dkr.ecr.<REGION>.amazonaws.com/payments
+      tag: "0.1"
+    ingress:
+      enabled: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 128Mi

@@ -1,0 +1,28 @@
+{{- range $svcName, $svc := .Values.apps }}
+{{- if and $svc.enabled $svc.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $.Values.tenantId }}-{{ $svcName }}
+  namespace: {{ $.Values.tenantId }}
+  labels:
+    {{- include "helm-tenant-chart.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svcName }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Values.tenantId }}-{{ $svcName }}
+                port:
+                  number: 80
+---
+{{- end }}
+{{- end }}

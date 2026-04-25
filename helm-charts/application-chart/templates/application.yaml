@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .Values.project }}
+  source:
+    repoURL: {{ .Values.source.repoURL }}
+    targetRevision: {{ .Values.source.targetRevision }}
+    {{- if .Values.source.chart }}
+    chart: {{ .Values.source.chart }}
+    {{- else }}
+    path: {{ .Values.source.path }}
+    {{- end }}
+    {{- if or .Values.source.helm.releaseName .Values.source.helm.values .Values.source.helm.parameters }}
+    helm:
+      {{- if .Values.source.helm.releaseName }}
+      releaseName: {{ .Values.source.helm.releaseName }}
+      {{- end }}
+      {{- if .Values.source.helm.values }}
+      values: |
+        {{- .Values.source.helm.values | nindent 8 }}
+      {{- end }}
+      {{- if .Values.source.helm.parameters }}
+      parameters:
+        {{- range .Values.source.helm.parameters }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  destination:
+    server: {{ .Values.destination.server }}
+    namespace: {{ .Values.destination.namespace }}
+  {{- if .Values.syncPolicy }}
+  syncPolicy:
+    {{- if .Values.syncPolicy.automated }}
+    automated:
+      prune: {{ .Values.syncPolicy.automated.prune }}
+      selfHeal: {{ .Values.syncPolicy.automated.selfHeal }}
+    {{- end }}
+    {{- if .Values.syncPolicy.syncOptions }}
+    syncOptions:
+      {{- range .Values.syncPolicy.syncOptions }}
+      - {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}

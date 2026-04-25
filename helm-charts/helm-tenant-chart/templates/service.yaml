@@ -1,0 +1,22 @@
+{{- range $svcName, $svc := .Values.apps }}
+{{- if $svc.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Values.tenantId }}-{{ $svcName }}
+  namespace: {{ $.Values.tenantId }}
+  labels:
+    {{- include "helm-tenant-chart.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svcName }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    {{- include "helm-tenant-chart.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svcName }}
+---
+{{- end }}
+{{- end }}

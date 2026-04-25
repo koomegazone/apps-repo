@@ -1,0 +1,33 @@
+# 범용 ArgoCD Application 래퍼 Helm 차트 기본값
+
+# Application 메타데이터
+name: ""
+namespace: argocd
+project: default
+
+# 소스 설정
+source:
+  # Git 저장소 소스
+  repoURL: ""
+  path: ""
+  targetRevision: main
+  # Helm 차트 소스 (chart 설정 시 path 대신 사용)
+  chart: ""
+  # Helm values override
+  helm:
+    releaseName: ""
+    values: ""
+    parameters: []
+
+# 배포 대상 설정
+destination:
+  server: https://kubernetes.default.svc
+  namespace: ""
+
+# 동기화 정책
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+  syncOptions:
+    - CreateNamespace=true

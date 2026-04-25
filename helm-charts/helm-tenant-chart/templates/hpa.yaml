@@ -1,0 +1,27 @@
+{{- range $svcName, $svc := .Values.apps }}
+{{- if and $svc.enabled (hasKey $svc "hpa") }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $.Values.tenantId }}-{{ $svcName }}
+  namespace: {{ $.Values.tenantId }}
+  labels:
+    {{- include "helm-tenant-chart.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svcName }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $.Values.tenantId }}-{{ $svcName }}
+  minReplicas: {{ $svc.hpa.minReplicas }}
+  maxReplicas: {{ $svc.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+{{- end }}
+{{- end }}

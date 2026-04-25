@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tenant-3
+  namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: consumer=064711168361.dkr.ecr.ap-northeast-2.amazonaws.com/consumer
+    argocd-image-updater.argoproj.io/consumer.update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/koomegazone/apps-repo
+    path: helm-charts/helm-tenant-chart
+    targetRevision: main
+    helm:
+      releaseName: tenant-3
+      values: |
+        tenantId: tenant-3
+        accountId: "064711168361"
+        region: "ap-northeast-2"
+        apps:
+          producer:
+            enabled: false
+            envId: pool-1
+            image:
+              tag: "0.0"
+          consumer:
+            enabled: true
+            envId: tenant-3
+            image:
+              tag: "0.0"
+          payments:
+            enabled: true
+            image:
+              tag: "0.0"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tenant-3
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: helm-tenant-chart
+description: SaaS 멀티테넌트 마이크로서비스 Helm 차트
+type: application
+version: 0.1.0
+appVersion: "0.1"

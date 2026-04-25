@@ -1,0 +1,45 @@
+{{- range $svcName, $svc := .Values.apps }}
+{{- if $svc.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Values.tenantId }}-{{ $svcName }}
+  namespace: {{ $.Values.tenantId }}
+  labels:
+    {{- include "helm-tenant-chart.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svcName }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "helm-tenant-chart.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ $svcName }}
+  template:
+    metadata:
+      labels:
+        {{- include "helm-tenant-chart.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $svcName }}
+    spec:
+      serviceAccountName: {{ $.Values.tenantId }}-{{ $svcName }}
+      containers:
+        - name: {{ $svcName }}
+          image: "{{ $svc.image.repository }}:{{ $svc.image.tag }}"
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: TENANT_ID
+              value: {{ $.Values.tenantId | quote }}
+            - name: ENV_ID
+              value: {{ if $svc.envId }}{{ $svc.envId | quote }}{{ else }}{{ $.Values.tenantId | quote }}{{ end }}
+            - name: SERVICE_NAME
+              value: {{ $svcName | quote }}
+          resources:
+            requests:
+              cpu: {{ $svc.resources.requests.cpu }}
+              memory: {{ $svc.resources.requests.memory }}
+            limits:
+              cpu: {{ $svc.resources.limits.cpu }}
+              memory: {{ $svc.resources.limits.memory }}
+---
+{{- end }}
+{{- end }}

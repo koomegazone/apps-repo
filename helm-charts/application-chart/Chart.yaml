@@ -1,0 +1,6 @@
+apiVersion: v2
+name: application-chart
+description: 범용 ArgoCD Application 래퍼 Helm 차트
+type: application
+version: 0.1.0
+appVersion: "0.1"

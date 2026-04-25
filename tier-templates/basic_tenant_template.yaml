@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {TENANT_ID}
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/koomegazone/apps-repo
+    path: helm-charts/helm-tenant-chart
+    targetRevision: main
+    helm:
+      releaseName: {TENANT_ID}
+      values: |
+        tenantId: {TENANT_ID}
+        accountId: "{ACCOUNT_ID}"
+        region: "{REGION}"
+        apps:
+          producer:
+            enabled: false
+            envId: pool-1
+            image:
+              tag: "{RELEASE_VERSION}"
+          consumer:
+            enabled: false
+            envId: pool-1
+            image:
+              tag: "{RELEASE_VERSION}"
+          payments:
+            enabled: true
+            image:
+              tag: "{RELEASE_VERSION}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {TENANT_ID}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
