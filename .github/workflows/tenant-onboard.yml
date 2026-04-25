@@ -1,0 +1,81 @@
+name: tenant-onboard
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant_id:
+        description: "테넌트 식별자 (e.g. tenant-99)"
+        required: true
+        type: string
+      tenant_tier:
+        description: "테넌트 티어"
+        required: true
+        type: choice
+        options:
+          - basic
+          - advanced
+          - premium
+      release_version:
+        description: "초기 릴리스 버전"
+        required: true
+        type: string
+        default: "0.0"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check duplicate
+        run: |
+          T="${{ inputs.tenant_id }}"
+          TIER="${{ inputs.tenant_tier }}"
+          if [ -f "tenants/$TIER/$T.yaml" ]; then
+            echo "::warning::tenants/$TIER/$T.yaml already exists. Skipping."
+            exit 0
+          fi
+
+      - name: Render tier template
+        run: |
+          set -euo pipefail
+          T="${{ inputs.tenant_id }}"
+          TIER="${{ inputs.tenant_tier }}"
+          V="${{ inputs.release_version }}"
+          ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
+          REGION="ap-northeast-2"
+
+          mkdir -p "tenants/$TIER"
+          cp "tier-templates/${TIER}_tenant_template.yaml" "tenants/$TIER/$T.yaml"
+
+          sed -i \
+            -e "s|{TENANT_ID}|$T|g" \
+            -e "s|{RELEASE_VERSION}|$V|g" \
+            -e "s|{ACCOUNT_ID}|$ACCOUNT_ID|g" \
+            -e "s|{REGION}|$REGION|g" \
+            "tenants/$TIER/$T.yaml"
+
+          echo "--- Generated manifest ---"
+          cat "tenants/$TIER/$T.yaml"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: "onboard/${{ inputs.tenant_id }}"
+          title: "Onboard ${{ inputs.tenant_id }} (${{ inputs.tenant_tier }})"
+          commit-message: "feat: onboard ${{ inputs.tenant_id }} (${{ inputs.tenant_tier }})"
+          body: |
+            Auto-generated tenant manifest.
+
+            - **tenant_id**: `${{ inputs.tenant_id }}`
+            - **tier**: `${{ inputs.tenant_tier }}`
+            - **release_version**: `${{ inputs.release_version }}`
+
+            머지하면 ArgoCD ApplicationSet이 자동으로 감지하여 배포합니다.
+          labels: |
+            tenant
+            automated

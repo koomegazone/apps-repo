@@ -1,0 +1,54 @@
+name: build-and-push
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [producer, consumer, payments]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if service changed
+        id: check
+        run: |
+          if [ -d "services/${{ matrix.service }}" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure AWS credentials (OIDC)
+        if: steps.check.outputs.exists == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/eks-saas-gitops-gha-ecr
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        if: steps.check.outputs.exists == 'true'
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push
+        if: steps.check.outputs.exists == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: services/${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/${{ matrix.service }}:prd-${{ github.run_number }}
+            ${{ steps.ecr.outputs.registry }}/${{ matrix.service }}:latest

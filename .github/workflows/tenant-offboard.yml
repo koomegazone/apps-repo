@@ -1,0 +1,54 @@
+name: tenant-offboard
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant_id:
+        description: "삭제할 테넌트 식별자 (e.g. tenant-99)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  remove-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find and remove tenant manifest
+        run: |
+          set -euo pipefail
+          T="${{ inputs.tenant_id }}"
+          FOUND=false
+
+          for TIER in basic advanced premium; do
+            if [ -f "tenants/$TIER/$T.yaml" ]; then
+              echo "Found tenants/$TIER/$T.yaml — removing."
+              rm "tenants/$TIER/$T.yaml"
+              FOUND=true
+            fi
+          done
+
+          if [ "$FOUND" = false ]; then
+            echo "::error::No manifest found for $T in any tier directory."
+            exit 1
+          fi
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: "offboard/${{ inputs.tenant_id }}"
+          title: "Offboard ${{ inputs.tenant_id }}"
+          commit-message: "chore: offboard ${{ inputs.tenant_id }}"
+          body: |
+            Auto-generated offboarding PR.
+
+            - **tenant_id**: `${{ inputs.tenant_id }}`
+
+            머지하면 ArgoCD가 prune으로 K8s 리소스를 자동 제거합니다.
+          labels: |
+            tenant
+            automated
