@@ -7,7 +7,7 @@ apps:
     envId: ""
     image:
       repository: 064711168361.dkr.ecr.ap-northeast-2.amazonaws.com/producer
-      tag: "0.1"
+      tag: "0.2"
     ingress:
       enabled: true
     resources:
@@ -25,7 +25,7 @@ apps:
     envId: ""
     image:
       repository: 064711168361.dkr.ecr.ap-northeast-2.amazonaws.com/consumer
-      tag: "0.1"
+      tag: "0.2"
     ingress:
       enabled: true
     resources:
@@ -42,7 +42,7 @@ apps:
     enabled: true
     image:
       repository: 064711168361.dkr.ecr.ap-northeast-2.amazonaws.com/payments
-      tag: "0.1"
+      tag: "0.2"
     ingress:
       enabled: false
     resources:

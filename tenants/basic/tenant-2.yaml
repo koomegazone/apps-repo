@@ -20,16 +20,16 @@ spec:
             enabled: false
             envId: pool-1
             image:
-              tag: "0.1"
+              tag: "0.2"
           consumer:
             enabled: false
             envId: pool-1
             image:
-              tag: "0.1"
+              tag: "0.2"
           payments:
             enabled: true
             image:
-              tag: "0.1"
+              tag: "0.2"
   destination:
     server: https://kubernetes.default.svc
     namespace: tenant-2
